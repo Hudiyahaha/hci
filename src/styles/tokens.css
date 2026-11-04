@@ -1,0 +1,42 @@
+/* Design system tokens. See docs/design-system.md. */
+:root {
+  /* Neutrals */
+  --page: #f5f6f3;
+  --surface: #ffffff;
+  --ink: #1f2a30;
+  --muted: #4f5d65;
+  --line: #7c8a92;
+  --line-soft: #d5dadb;
+  --neutral-soft: #e8ebea;
+
+  /* Brand */
+  --accent: #1f5f6b;
+  --accent-hover: #174a54;
+  --accent-active: #103840;
+  --accent-soft: #e3f0f1;
+  --on-accent: #ffffff;
+
+  /* Semantic */
+  --error: #a32a2a;
+  --error-soft: #fbeceb;
+  --success: #1e6b3f;
+  --success-soft: #e8f4ec;
+  --warning: #7a5200;
+  --warning-soft: #fdf4e1;
+  --disabled: #5f6b70;
+  --disabled-soft: #e9ecea;
+  --focus: #1d4ed8;
+
+  /* Type scale: three levels */
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.75rem;
+
+  /* Spacing */
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 1.5rem;
+  --space-4: 2rem;
+
+  --radius: 8px;
+}
