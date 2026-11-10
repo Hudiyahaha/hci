@@ -241,7 +241,7 @@ T1, B1 = R1, R1 + H
 T2, B2 = R2, R2 + H
 MID1, MID2 = R1 + H / 2, R2 + H / 2
 RAIL = 905
-TOTAL_W, TOTAL_H = 2920, 1790
+TOTAL_W, TOTAL_H = 2920, 2020
 
 parts.append(t(80, 50, "What Happens Next: wireframe flow (hub-and-spoke, grayscale, low fidelity)", 26, 700))
 parts.append(path([(80, 88), (140, 88)]) + t(150, 93, "Forward navigation", 14))
@@ -287,6 +287,19 @@ a += path([(900, B2), (900, 1680), (2000, 1680), (2000, B2)]) + label(1450, 1672
 a += path([(2560, B2), (2560, 1730), (280, 1730), (280, B2)]) + label(1450, 1722, "Not yet, come back later", "middle")
 a += "</g>"
 parts.append(a)
+
+NOTES_Y = 1800
+n = '<g id="Design-notes">'
+n += rect(80, NOTES_Y, 2680, 186, MID, 1.5)
+n += t(104, NOTES_Y + 36, "Design notes", 20, 700)
+n += t(104, NOTES_Y + 72, "Gestalt: connectedness", 16, 700)
+n += t(320, NOTES_Y + 72, "Arrows join the timeline's four stages (Screens 1 and 2), so students read them as one process rather than separate options.", 16)
+n += t(104, NOTES_Y + 106, "Gestalt: common region", 16, 700)
+n += t(320, NOTES_Y + 106, "Each question and its answer share a box (Screens 2 to 6), and related prompts share a group (Screens 7 and 8), so it's clear what belongs together.", 16)
+n += t(104, NOTES_Y + 140, "Visual hierarchy", 16, 700)
+n += t(320, NOTES_Y + 140, "Screen headings are largest, thick borders mark the key item on a screen, such as a decision point, and darker filled buttons mark the main action.", 16)
+n += "</g>"
+parts.append(n)
 
 svg = (f'<svg xmlns="http://www.w3.org/2000/svg" width="{TOTAL_W}" height="{TOTAL_H}" viewBox="0 0 {TOTAL_W} {TOTAL_H}">'
        f'<rect id="Board" width="{TOTAL_W}" height="{TOTAL_H}" fill="#FFFFFF"/>' + "".join(parts) + "</svg>")
