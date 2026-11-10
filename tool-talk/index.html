@@ -1,0 +1,569 @@
+<meta charset="utf-8">
+<title>AI Flow Repair Test</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a single lab-notebook column. Run log, then the live prototypes, then the audit that judges them. */
+:root {
+  --paper: #f3f5f4;
+  --sheet: #ffffff;
+  --ink: #18242a;
+  --muted: #52616a;
+  --rule: #d3dbdc;
+  --rule-strong: #8b9aa1;
+  --accent: #1f5f6b;          /* D4 teal: the team's own design system */
+  --accent-soft: #e2eff0;
+  --ai: #8a4b14;              /* marks AI-generated material */
+  --ai-soft: #fbf0e4;
+  --met: #1e6b3f;  --met-soft: #e6f3ea;
+  --part: #7a5200; --part-soft: #fcf2dc;
+  --miss: #a32a2a; --miss-soft: #fbeaea;
+  --focus: #1d4ed8;
+  --font-body: "IBM Plex Sans", system-ui, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  --s1: 0.5rem; --s2: 1rem; --s3: 1.5rem; --s4: 2.5rem; --s5: 4rem;
+  --radius: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #121a1d; --sheet: #1a2428; --ink: #e4ebec; --muted: #a3b2b8;
+    --rule: #2f3d42; --rule-strong: #5f7279;
+    --accent: #7cc3cf; --accent-soft: #1d3338;
+    --ai: #f0b27a; --ai-soft: #33251a;
+    --met: #7fd3a0; --met-soft: #173024; --part: #f0c76a; --part-soft: #332a14; --miss: #f29a9a; --miss-soft: #3a1c1c;
+    --focus: #8fb0ff; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #121a1d; --sheet: #1a2428; --ink: #e4ebec; --muted: #a3b2b8;
+  --rule: #2f3d42; --rule-strong: #5f7279;
+  --accent: #7cc3cf; --accent-soft: #1d3338;
+  --ai: #f0b27a; --ai-soft: #33251a;
+  --met: #7fd3a0; --met-soft: #173024; --part: #f0c76a; --part-soft: #332a14; --miss: #f29a9a; --miss-soft: #3a1c1c;
+  --focus: #8fb0ff; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font-family: var(--font-body); font-size: 1rem; line-height: 1.6; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: var(--s4) var(--s5); display: grid; gap: var(--s5); }
+h1, h2, h3 { line-height: 1.2; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(1.9rem, 4vw, 2.8rem); font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 1.5rem; font-weight: 600; }
+h3 { font-size: 1.05rem; font-weight: 600; }
+p { margin: 0; }
+.prose { max-width: 68ch; display: grid; gap: var(--s2); }
+.muted { color: var(--muted); }
+.label { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.mono { font-family: var(--font-mono); font-size: 0.875rem; }
+a { color: var(--accent); }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+section { display: grid; gap: var(--s3); }
+.section-head { display: grid; gap: var(--s1); border-top: 2px solid var(--ink); padding-top: var(--s2); }
+
+/* Header */
+header.top { display: grid; gap: var(--s3); }
+.meta-row { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s3); }
+.question { font-size: 1.2rem; max-width: 60ch; border-left: 3px solid var(--accent); padding-left: var(--s2); }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; }
+.facts > div { background: var(--sheet); padding: var(--s2); display: grid; gap: 2px; align-content: start; min-width: 0; }
+.facts strong { font-size: 1.05rem; }
+
+/* Run log */
+.log { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--s2); counter-reset: step; }
+.log li { display: grid; gap: 4px; align-content: start; padding-top: var(--s1); border-top: 3px solid var(--rule-strong); counter-increment: step; }
+.log li.ai { border-top-color: var(--ai); }
+.log li.team { border-top-color: var(--accent); }
+.log li::before { content: counter(step); font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); }
+.log .t { font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: var(--s3); font-size: 0.875rem; color: var(--muted); }
+.legend span::before { content: ""; display: inline-block; width: 18px; height: 3px; vertical-align: middle; margin-right: 6px; background: var(--k); }
+
+/* Viewer */
+.tabs { display: flex; flex-wrap: wrap; gap: var(--s1); }
+.tab { font: inherit; font-weight: 600; border: 1.5px solid var(--rule-strong); background: var(--sheet); color: var(--ink); border-radius: var(--radius); padding: 0.55rem 1rem; cursor: pointer; min-height: 2.75rem; display: grid; text-align: left; line-height: 1.3; }
+.tab small { font-weight: 400; color: var(--muted); font-size: 0.8rem; }
+.tab[aria-selected="true"] { border-color: var(--ink); box-shadow: inset 0 -3px 0 var(--k, var(--ink)); }
+.tab:hover { background: var(--accent-soft); }
+.viewer { display: grid; grid-template-columns: minmax(0, 420px) minmax(0, 1fr); gap: var(--s3); align-items: start; }
+.viewer.wide { grid-template-columns: minmax(0, 1fr); }
+.frame-box { display: grid; gap: var(--s1); min-width: 0; }
+.frame-tools { display: flex; flex-wrap: wrap; gap: var(--s1); align-items: center; justify-content: space-between; }
+.seg { display: inline-flex; border: 1px solid var(--rule-strong); border-radius: var(--radius); overflow: hidden; }
+.seg button { font: inherit; font-size: 0.85rem; border: 0; background: var(--sheet); color: var(--ink); padding: 0.35rem 0.75rem; cursor: pointer; min-height: 2.25rem; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+iframe.proto { width: 100%; height: 720px; border: 1px solid var(--rule-strong); border-radius: 10px; background: #fff; display: block; }
+.panel { display: grid; gap: var(--s3); min-width: 0; }
+.panel .block { display: grid; gap: var(--s1); }
+.tasks { margin: 0; padding-left: 1.25rem; display: grid; gap: var(--s1); }
+.prompt { font-family: var(--font-mono); font-size: 0.82rem; line-height: 1.55; white-space: pre-wrap; background: var(--ai-soft); border: 1px solid var(--rule); border-left: 3px solid var(--ai); border-radius: var(--radius); padding: var(--s2); margin: 0; overflow-x: auto; }
+.prompt.team { background: var(--accent-soft); border-left-color: var(--accent); }
+
+/* Spotlight */
+.spot { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s3); }
+.quote { background: var(--sheet); border: 1px solid var(--rule); border-radius: var(--radius); padding: var(--s2); display: grid; gap: var(--s1); align-content: start; }
+.quote q { font-family: var(--font-mono); font-size: 0.9rem; quotes: "\201C" "\201D"; }
+.quote.ai { border-left: 3px solid var(--ai); }
+.quote.team { border-left: 3px solid var(--accent); }
+
+/* Audit table */
+.table-scroll { overflow-x: auto; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--sheet); }
+table { border-collapse: collapse; width: 100%; min-width: 860px; font-size: 0.9rem; }
+th, td { text-align: left; vertical-align: top; padding: 0.75rem; border-bottom: 1px solid var(--rule); }
+thead th { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 500; background: var(--paper); }
+tbody th { font-weight: 600; width: 22%; }
+tbody th small { display: block; font-weight: 400; color: var(--muted); margin-top: 4px; }
+td { width: 26%; }
+td p + p { margin-top: 4px; }
+tfoot td, tfoot th { border-bottom: 0; font-weight: 600; background: var(--paper); }
+.chip { display: inline-block; font-family: var(--font-mono); font-size: 0.72rem; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; padding: 1px 8px; border-radius: 999px; border: 1px solid currentColor; margin-bottom: 4px; white-space: nowrap; }
+.chip.met { color: var(--met); background: var(--met-soft); }
+.chip.part { color: var(--part); background: var(--part-soft); border-style: dashed; }
+.chip.miss { color: var(--miss); background: var(--miss-soft); }
+.chip.met::before { content: "\2713  "; }
+.chip.part::before { content: "\25D0  "; }
+.chip.miss::before { content: "\2715  "; }
+.ev { font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); }
+
+/* Repair side effects */
+.claims { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s1); }
+.claims li { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); gap: var(--s1); background: var(--sheet); border: 1px solid var(--rule); border-radius: var(--radius); padding: 0.6rem var(--s2); }
+.claims .n { font-family: var(--font-mono); color: var(--ai); font-size: 0.85rem; }
+.claims q { font-family: var(--font-mono); font-size: 0.85rem; }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s4); }
+.two > div { display: grid; gap: var(--s2); align-content: start; min-width: 0; }
+ul.plain { margin: 0; padding-left: 1.2rem; display: grid; gap: var(--s1); }
+
+/* Comparison */
+.cmp th[scope="row"] { width: 20%; }
+.cmp td { width: 26.6%; }
+
+/* Recommendation */
+.rec { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--s2); }
+.rec > div { background: var(--sheet); border: 1px solid var(--rule); border-radius: var(--radius); padding: var(--s2); display: grid; gap: var(--s1); align-content: start; }
+.rec h3 { display: flex; gap: var(--s1); align-items: baseline; }
+.files { display: grid; gap: 4px; }
+.files div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--s2); border-bottom: 1px dashed var(--rule); padding-block: 6px; }
+.files code { font-family: var(--font-mono); font-size: 0.82rem; word-break: break-all; }
+footer { font-size: 0.875rem; color: var(--muted); display: grid; gap: var(--s1); border-top: 1px solid var(--rule); padding-top: var(--s2); }
+
+@media (max-width: 860px) {
+  .viewer, .spot, .two { grid-template-columns: minmax(0, 1fr); }
+  iframe.proto { height: 640px; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
+</style>
+
+<div class="wrap">
+
+<header class="top">
+  <div class="meta-row">
+    <span class="label">CS3014 Tool Talk</span>
+    <span class="label">Team Aloo</span>
+    <span class="label">Topic 1 · AI-assisted prototyping</span>
+    <span class="label">Demonstration artifact</span>
+  </div>
+  <h1>Prompt, inspect, repair: an AI-generated counselling flow tested against our research</h1>
+  <p class="question">When an AI tool builds a flow from a short prompt, which assumptions about our users does it get wrong, and does a repair prompt fix them or just move the problem?</p>
+  <div class="facts">
+    <div><span class="label">Project</span><strong>What Happens Next (D4)</strong><span class="muted">Shows students what happens after they contact a counselling service</span></div>
+    <div><span class="label">AI tool</span><strong>Claude, claude-opus-5-5</strong><span class="muted">Fresh instance with no project files. Used in place of Figma Make</span></div>
+    <div><span class="label">Runs</span><strong>1 prompt + 1 repair</strong><span class="muted">10 November 2026. Output kept unedited</span></div>
+    <div><span class="label">Baseline</span><strong>Team's D4 prototype</strong><span class="muted">Flow designed from our IA, card sort and D3 concept</span></div>
+  </div>
+</header>
+
+<section aria-labelledby="log-h">
+  <div class="section-head">
+    <span class="label">Workflow</span>
+    <h2 id="log-h">What we did, in order</h2>
+  </div>
+  <ol class="log">
+    <li class="team"><h3>Write a short prompt</h3><p class="muted">Three sentences, the kind a team types on day one. No research findings included.</p></li>
+    <li class="ai"><h3>Generate v1</h3><p class="muted">6 screens, one HTML file.</p><span class="t">125 s · 34,491 bytes</span></li>
+    <li class="team"><h3>Inspect against our research</h3><p class="muted">8 requirements from D3/D4, plus an axe scan and scripted keyboard checks.</p></li>
+    <li class="team"><h3>Write a repair prompt</h3><p class="muted">Names the wrong assumption and the evidence against it. Asks for 3 changes.</p></li>
+    <li class="ai"><h3>Generate v2</h3><p class="muted">Same conversation, new file.</p><span class="t">116 s · 37,957 bytes</span></li>
+    <li class="team"><h3>Re-inspect and compare</h3><p class="muted">Same 8 requirements, same scan, against the D4 flow.</p></li>
+  </ol>
+  <div class="legend">
+    <span style="--k: var(--ai)">AI step</span>
+    <span style="--k: var(--accent)">Team step</span>
+  </div>
+</section>
+
+<section aria-labelledby="viewer-h">
+  <div class="section-head">
+    <span class="label">Inspectable prototypes</span>
+    <h2 id="viewer-h">Try the three flows</h2>
+    <p class="muted prose">Each version runs below exactly as it was saved. Run the same two tasks in each and watch where they diverge.</p>
+  </div>
+
+  <div class="tabs" role="tablist" aria-label="Prototype version">
+    <button class="tab" role="tab" id="tab-v1" aria-controls="viewer" aria-selected="true" data-v="v1" style="--k: var(--ai)">v1 · AI-generated<small>From the short prompt</small></button>
+    <button class="tab" role="tab" id="tab-v2" aria-controls="viewer" aria-selected="false" data-v="v2" style="--k: var(--ai)">v2 · AI-repaired<small>After one repair prompt</small></button>
+    <button class="tab" role="tab" id="tab-d4" aria-controls="viewer" aria-selected="false" data-v="d4" style="--k: var(--accent)">D4 · Team-designed<small>Manual baseline</small></button>
+  </div>
+
+  <div class="viewer" id="viewer" role="tabpanel" aria-labelledby="tab-v1">
+    <div class="frame-box">
+      <div class="frame-tools">
+        <div class="seg" role="group" aria-label="Preview width">
+          <button type="button" data-w="phone" aria-pressed="true">Phone</button>
+          <button type="button" data-w="wide" aria-pressed="false">Wide</button>
+        </div>
+        <a id="open-link" href="evidence/v1-ai-generated.html" target="_blank" rel="noopener">Open in its own tab</a>
+      </div>
+      <iframe class="proto" id="proto" title="v1 AI-generated prototype" src="evidence/v1-ai-generated.html"></iframe>
+    </div>
+
+    <div class="panel">
+      <div class="block">
+        <span class="label">Task A · understand</span>
+        <p>Find out what happens after you get in touch, and whether you can stop after the service first replies.</p>
+      </div>
+      <div class="block">
+        <span class="label">Task B · act, including the error case</span>
+        <p>Contact the service with a question without booking anything. Then try to continue with nothing filled in.</p>
+      </div>
+      <div class="block" id="watch">
+        <span class="label">What to watch for in this version</span>
+        <ul class="tasks" id="watch-list"></ul>
+      </div>
+      <div class="block">
+        <span class="label" id="prompt-label">Prompt that produced this version</span>
+        <pre class="prompt" id="prompt-text"></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="spot-h">
+  <div class="section-head">
+    <span class="label">The incorrect assumption</span>
+    <h2 id="spot-h">v1 treated getting in touch as signing up</h2>
+  </div>
+  <div class="prose">
+    <p>The prompt asked for a flow that helps a student "understand what happens after they get in touch". It never said whether the student wants to book. The AI filled that gap with the most common pattern for service websites: a funnel that ends in a referral form.</p>
+  </div>
+  <div class="spot">
+    <div class="quote ai">
+      <span class="label">v1 · what the AI assumed</span>
+      <q>Every route leads to the same first step: a short chat with a counsellor.</q>
+      <p class="muted">The only action is a self-referral form. It requires an 8-digit student ID and asks what the student needs support with. Submitting it shows <span class="mono">Thanks, Sam. Your referral has been sent.</span> and a reference number such as <span class="mono">NU-CS-4821</span>, even though a note above the form says nothing is sent.</p>
+    </div>
+    <div class="quote team">
+      <span class="label">D3/D4 · what our research found</span>
+      <q>Ask the service a few questions. Not a booking.</q>
+      <p class="muted">First-time students want to understand the process and ask questions before committing, and want to know they can stop at each stage. D4 puts a "can you stop here?" decision point on each stage, and the message it builds says <span class="mono">I'm not booking yet.</span></p>
+    </div>
+  </div>
+  <div class="prose">
+    <p>Two smaller assumptions came with it. v1 listed UK emergency numbers (999, Samaritans 116 123) and a campus security line as if they were real and verified for our users. It also stated service facts such as <span class="mono">Within 2 working days</span> with no sample label. The only disclaimer is one line in the footer.</p>
+  </div>
+</section>
+
+<section aria-labelledby="audit-h">
+  <div class="section-head">
+    <span class="label">Evidence</span>
+    <h2 id="audit-h">Requirement audit</h2>
+    <p class="muted prose">Each requirement comes from our D3 research or a rule already in the D4 build. Evidence is quoted from the saved files or from the scripted checks we ran on 10 November 2026.</p>
+  </div>
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr><th scope="col">Requirement</th><th scope="col">v1 · AI-generated</th><th scope="col">v2 · AI-repaired</th><th scope="col">D4 · Team-designed</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">R1 Getting in touch is not a commitment<small>Students can ask without booking</small></th>
+          <td><span class="chip miss">Not met</span><p>The only action is <span class="ev">Send my referral</span>. Reception "will take a few details and book you in".</p></td>
+          <td><span class="chip met">Met</span><p>A question builder replaces the form. <span class="ev">Asking questions doesn't sign you up or book anything.</span></p></td>
+          <td><span class="chip met">Met</span><p>Decision screen offers <span class="ev">Ask the service a few questions · Not a booking</span> and <span class="ev">Not yet, come back later</span>.</p></td>
+        </tr>
+        <tr>
+          <th scope="row">R2 A stop point at each stage<small>Students know they can leave</small></th>
+          <td><span class="chip miss">Not met</span><p>Leaving is only covered in an FAQ on screen 6 of 6: "reply to any of our emails or call reception to cancel".</p></td>
+          <td><span class="chip met">Met</span><p>All 5 timeline stages gained a <span class="ev">You can stop here</span> note. Their content is a new problem (see below).</p></td>
+          <td><span class="chip met">Met</span><p>Reply and First appointment each end in <span class="ev">Decision point: can you stop here?</span></p></td>
+        </tr>
+        <tr>
+          <th scope="row">R3 No sensitive data collected<small>Privacy-sensitive context</small></th>
+          <td><span class="chip miss">Not met</span><p>Student ID required. Optional field: <span class="ev">What would you like support with?</span></p></td>
+          <td><span class="chip met">Met</span><p>Only an optional sign-off name, used in the copied text. Nothing is stored.</p></td>
+          <td><span class="chip met">Met</span><p>No personal fields. Selections stay in memory until reload.</p></td>
+        </tr>
+        <tr>
+          <th scope="row">R4 Never claims something was sent<small>The page has no backend</small></th>
+          <td><span class="chip miss">Not met</span><p><span class="ev">Your referral has been sent</span> plus a random reference number and "a confirmation to your university email".</p></td>
+          <td><span class="chip met">Met</span><p><span class="ev">Copied. … This page hasn't sent anything.</span></p></td>
+          <td><span class="chip met">Met</span><p><span class="ev">Copied. Nothing has been sent.</span></p></td>
+        </tr>
+        <tr>
+          <th scope="row">R5 Urgent contact is verified or marked unconfirmed<small>Safety-critical content</small></th>
+          <td><span class="chip miss">Not met</span><p>999, Samaritans 116 123 and a campus security number, shown as fact in the header dialog and on the FAQ screen.</p></td>
+          <td><span class="chip met">Met</span><p><span class="ev">Urgent contact: Not confirmed</span> with a note to contact local emergency services.</p></td>
+          <td><span class="chip met">Met</span><p><span class="ev">Urgent contact: Not confirmed. If you're in immediate danger, call your local emergency number.</span></p></td>
+        </tr>
+        <tr>
+          <th scope="row">R6 Unverified facts are labelled<small>Placeholder must not read as real</small></th>
+          <td><span class="chip miss">Not met</span><p>Timings, costs and confidentiality rules stated as fact. One footer line: <span class="ev">Prototype – placeholder content</span>. Includes an invented student testimonial.</p></td>
+          <td><span class="chip miss">Not met</span><p>Not asked for in the repair, and worse than v1: the repair added 7 new unlabelled promises about service policy.</p></td>
+          <td><span class="chip met">Met</span><p>Every fact carries a <span class="ev">Sample</span> tag. Unknown facts show <span class="ev">Not confirmed</span> in a dashed box.</p></td>
+        </tr>
+        <tr>
+          <th scope="row">R7 Students can go straight to their topic<small>Hub-and-spoke structure from our card sort</small></th>
+          <td><span class="chip part">Partly</span><p>A step bar allows jumping, but screens are labelled <span class="ev">Step 2 of 6</span> and the last button is <span class="ev">I'm ready to get in touch</span>.</p></td>
+          <td><span class="chip part">Partly</span><p>Unchanged. The repair edited content inside the funnel and kept the funnel.</p></td>
+          <td><span class="chip met">Met</span><p>Timeline hub with 4 topic sections named from the card sort.</p></td>
+        </tr>
+        <tr>
+          <th scope="row">R8 Form errors reach keyboard and screen-reader users<small>Found by manual check, missed by axe</small></th>
+          <td><span class="chip miss">Not met</span><p>Errors appear visually. Focus doesn't move, nothing is announced, and errors aren't linked to their fields.</p></td>
+          <td><span class="chip miss">Not met</span><p>Same pattern. After Copy with nothing chosen, focus stays on the button and the error has no live region.</p></td>
+          <td><span class="chip met">Met</span><p>Error uses <span class="ev">role="alert"</span>. Focus moves to the first checkbox.</p></td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr><th scope="row">Requirements met</th><td>0 of 8 (1 partly)</td><td>5 of 8 (1 partly)</td><td>8 of 8</td></tr>
+        <tr><th scope="row">axe-core 4.10.2 violations</th><td>heading-order (moderate) on 2 screens</td><td>heading-order (moderate) on 2 screens</td><td>0 on all 10 screens</td></tr>
+      </tfoot>
+    </table>
+  </div>
+  <p class="muted prose">The axe row shows why the scan alone isn't enough. It rated v1 and v2 almost clean, yet R8 fails in both. Only stepping through the error case found it.</p>
+</section>
+
+<section aria-labelledby="repair-h">
+  <div class="section-head">
+    <span class="label">Failure case</span>
+    <h2 id="repair-h">The repair fixed what we named and invented what we didn't</h2>
+  </div>
+  <div class="two">
+    <div>
+      <p>The repair prompt asked for 3 changes and got all 3. But to write "what stopping means" at each stage, the AI had to say how the service behaves. It doesn't know, so it made up policy and presented it as promises to a student:</p>
+      <ol class="claims">
+        <li><span class="n">01</span><q>we won't contact you unless you've asked us something.</q></li>
+        <li><span class="n">02</span><q>That's fine. We won't chase you. You can get back in touch whenever you're ready, even months later.</q></li>
+        <li><span class="n">03</span><q>No appointment is made unless you ask for one.</q></li>
+        <li><span class="n">04</span><q>you can … end the conversation early on the day. You don't need to give a reason.</q></li>
+        <li><span class="n">05</span><q>The counsellor will explain how to come back later if you change your mind.</q></li>
+        <li><span class="n">06</span><q>Stopping early won't affect whether you can use the service again.</q></li>
+        <li><span class="n">07</span><q>If you email, you'll get an automatic reply saying your message has reached us.</q></li>
+      </ol>
+    </div>
+    <div>
+      <h3>Other side effects</h3>
+      <ul class="plain">
+        <li>One question is ticked before the student chooses anything. That nudges what they ask.</li>
+        <li>The invented address <span class="mono">counselling@northbridge.ac.uk</span> now appears in the copy instructions.</li>
+        <li>The funnel stayed. The repair changed sentences inside it and kept <span class="mono">Step 2 of 6</span> and <span class="mono">I'm ready to get in touch</span>.</li>
+        <li>The error pattern from v1 carried over unchanged, because the prompt didn't mention it.</li>
+      </ul>
+      <h3>What this means</h3>
+      <p>A repair prompt is a local patch. It fixes the sentences you point at. It doesn't change structure you didn't name, and it fills new gaps the same way it filled the first one. Every repair needs the same inspection as the first draft.</p>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="cmp-h">
+  <div class="section-head">
+    <span class="label">Comparison</span>
+    <h2 id="cmp-h">AI-assisted flow against the team-designed flow</h2>
+  </div>
+  <div class="table-scroll">
+    <table class="cmp">
+      <thead><tr><th scope="col">Criterion</th><th scope="col">AI v1</th><th scope="col">AI v2 (after repair)</th><th scope="col">Team D4</th></tr></thead>
+      <tbody>
+        <tr>
+          <th scope="row">Speed to a clickable flow</th>
+          <td>125 s of generation</td>
+          <td>+116 s of generation, plus the team's inspection time</td>
+          <td>Built up across D3 and D4. Team to record the hours</td>
+        </tr>
+        <tr>
+          <th scope="row">Fit with user research</th>
+          <td>0 of 8 requirements. Wrong core goal</td>
+          <td>5 of 8 requirements. Right goal, wrong facts</td>
+          <td>8 of 8, but the requirements came from the same team (see limitations)</td>
+        </tr>
+        <tr>
+          <th scope="row">Trustworthiness of content</th>
+          <td>Unlabelled invented facts, a testimonial and UK emergency numbers</td>
+          <td>Emergency numbers removed, 7 new invented policy promises</td>
+          <td>Every fact labelled Sample, Not confirmed or verified</td>
+        </tr>
+        <tr>
+          <th scope="row">Error recovery for keyboard and screen-reader users</th>
+          <td>Visual only</td>
+          <td>Visual only</td>
+          <td>Announced, with focus moved to the problem</td>
+        </tr>
+        <tr>
+          <th scope="row">Editability</th>
+          <td>One 34 KB file. Content mixed into markup</td>
+          <td>One 38 KB file. Content mixed into markup</td>
+          <td>Content kept in one data file with <span class="mono">sample()</span> and <span class="mono">verified()</span> helpers</td>
+        </tr>
+        <tr>
+          <th scope="row">Visual polish and variety of content</th>
+          <td>High. Covered topics we hadn't, such as video or phone appointments and counsellor preference</td>
+          <td>Same as v1</td>
+          <td>Plain by design. Narrower content</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section aria-labelledby="lim-h">
+  <div class="section-head">
+    <span class="label">Limits of this evidence</span>
+    <h2 id="lim-h">What this test can and can't show</h2>
+  </div>
+  <div class="two">
+    <div>
+      <h3>Can show</h3>
+      <ul class="plain">
+        <li>What one AI tool assumed about this task when the prompt left the user's goal open.</li>
+        <li>That a targeted repair prompt fixed the named problems in one turn.</li>
+        <li>That the repair introduced new unverified content and didn't touch structure.</li>
+        <li>That an automated scan missed an error-recovery failure that a manual check found.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Can't show</h3>
+      <ul class="plain">
+        <li><strong>Other tools.</strong> We used Claude, not Figma Make. We haven't tested Figma Make's own claims.</li>
+        <li><strong>Repeatability.</strong> One run each. AI output varies, so another run may make different assumptions.</li>
+        <li><strong>A fair baseline.</strong> D4 meets 8 of 8 partly because our team wrote both D4 and the requirements.</li>
+        <li><strong>An independent reviewer.</strong> A Claude session, from the same model family as the generator, ran the checks and drafted this audit. The team needs to repeat the walkthrough and confirm each finding.</li>
+        <li><strong>Real accessibility.</strong> No screen reader was used and no disabled user tested any version.</li>
+        <li><strong>Real users.</strong> Our requirements come from D3 research, but no student used v1, v2 or D4 for this test.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="prose">
+    <p><strong>Ethics.</strong> In a mental-health context, a confident invented sentence can do harm. v1's wrong emergency numbers and v2's invented promises ("Stopping early won't affect whether you can use the service again") would read as commitments from a real service. AI-generated content for this kind of service must stay labelled until someone checks it with the service.</p>
+  </div>
+</section>
+
+<section aria-labelledby="rec-h">
+  <div class="section-head">
+    <span class="label">Recommendation</span>
+    <h2 id="rec-h">When to use, adapt or avoid it</h2>
+  </div>
+  <div class="rec">
+    <div><h3><span class="chip met">Use</span> for breadth</h3><p>Generate a first draft early, to surface topics and screen ideas the team missed. v1 raised appointment format and counsellor choice, which D4 doesn't cover.</p></div>
+    <div><h3><span class="chip part">Adapt</span> the prompt</h3><p>Put your research findings and content rules in the first prompt, not the repair. Inspect every version against written requirements, including error cases and keyboard use.</p></div>
+    <div><h3><span class="chip miss">Avoid</span> for facts</h3><p>Don't take AI-written service facts, safety contacts or policy wording. Don't treat a polished flow as evidence about users.</p></div>
+  </div>
+  <p class="muted prose">Course connection: this workflow fits D4 (fast alternative flows to compare against a chosen concept) and D5 (the R8 finding shows why an automated scan must be paired with manual checks).</p>
+</section>
+
+<footer>
+  <span class="label">Evidence files in this folder</span>
+  <div class="files">
+    <div><code>evidence/v1-prompt.txt</code><span>Prompt, verbatim</span></div>
+    <div><code>evidence/v1-ai-generated.html</code><span class="mono">sha256 49ec1601…</span></div>
+    <div><code>evidence/v2-repair-prompt.txt</code><span>Repair prompt, verbatim</span></div>
+    <div><code>evidence/v2-ai-repaired.html</code><span class="mono">sha256 c5ca671c…</span></div>
+    <div><code>manual-d4/</code><span>D4 build, 4 November 2026</span></div>
+  </div>
+  <p>AI use: Claude generated v1 and v2, ran the scripted checks and drafted this page. The team designed D4, chose the requirements and must confirm each finding before citing it.</p>
+</footer>
+
+</div>
+
+<script>
+(function () {
+  var V = {
+    v1: {
+      src: "evidence/v1-ai-generated.html",
+      title: "v1 AI-generated prototype",
+      promptLabel: "Prompt that produced this version (verbatim)",
+      team: false,
+      prompt: "Create a clickable prototype as a single self-contained HTML file (inline CSS and JavaScript, no external libraries or fonts) for a university counselling service.\n\nThe user is a university student who is thinking about contacting the counselling service for the first time. The prototype should help them understand what happens after they get in touch.\n\nMake 4 to 6 screens with working navigation between them. Use realistic placeholder content.",
+      watch: [
+        "Task A: the timeline on screen 3 has no stop points. Leaving is only covered in the FAQ on screen 6.",
+        "Task B: the only way to ask anything is “Start the form”, which is a referral that needs a student ID.",
+        "Error case: press “Send my referral” with the form empty. The errors appear, but focus doesn't move and nothing is announced.",
+        "Submit a valid form: “Your referral has been sent” appears, with a reference number."
+      ]
+    },
+    v2: {
+      src: "evidence/v2-ai-repaired.html",
+      title: "v2 AI-repaired prototype",
+      promptLabel: "Repair prompt, sent in the same conversation (verbatim)",
+      team: true,
+      prompt: "This prototype assumes a student who gets in touch is ready to refer themselves. Our research found that first-time students mostly want to understand what happens and ask a few questions before committing to anything, and they want to know they can stop at each stage.\n\nPlease revise the prototype:\n\n1. Replace the self-referral form with a way for the student to put together a short message of questions, which they copy into their own email. Don't ask for a student ID or for what they need support with, and never say that anything was sent or booked.\n2. On each stage of the \"what happens after you get in touch\" timeline, say whether the student can stop at that point and what stopping means.\n3. The urgent help numbers aren't verified for our users. Show the urgent contact as \"Not confirmed\" with a note to use local emergency services, instead of specific numbers.\n\nKeep the rest of the prototype as it is.",
+      watch: [
+        "Task A: every timeline stage now says “You can stop here”. Read what each one promises.",
+        "Task B: “Write my questions” opens a question builder. One question is already ticked.",
+        "Error case: untick everything and press “Copy message”. The error shows, but focus stays on the button.",
+        "Open “Need help right now?”: the urgent contact now reads Not confirmed."
+      ]
+    },
+    d4: {
+      src: "manual-d4/index.html",
+      title: "D4 team-designed prototype",
+      promptLabel: "No prompt: designed by the team from research",
+      team: true,
+      prompt: "Flow: timeline hub (Reply → First appointment → Cost → Decide)\n      + 4 topic sections from the card sort\nDecide → Ask the service a few questions (not a booking)\n       → Not yet, come back later\nQuestions → Build my message → Copy into your own email\n\nFailed load demo: open manual-d4/index.html?fail=1",
+      watch: [
+        "Task A: open Reply on the timeline. It ends in “Decision point: can you stop here?”",
+        "Task B: Decide → “Ask the service a few questions”. The message starts “I'm not booking yet.”",
+        "Error case: press “Build my message” with nothing chosen. The error is announced and focus moves to the first checkbox.",
+        "Every fact shows a Sample tag or Not confirmed."
+      ]
+    }
+  };
+  var tabs = Array.prototype.slice.call(document.querySelectorAll(".tab"));
+  var frame = document.getElementById("proto");
+  var panel = document.getElementById("viewer");
+  var open = document.getElementById("open-link");
+  var list = document.getElementById("watch-list");
+  var pText = document.getElementById("prompt-text");
+  var pLabel = document.getElementById("prompt-label");
+
+  function select(key, focus) {
+    var v = V[key] || V.v1;
+    if (!V[key]) key = "v1";
+    tabs.forEach(function (t) {
+      var on = t.dataset.v === key;
+      t.setAttribute("aria-selected", on ? "true" : "false");
+      t.tabIndex = on ? 0 : -1;
+      if (on) { panel.setAttribute("aria-labelledby", t.id); if (focus) t.focus(); }
+    });
+    if (frame.getAttribute("src") !== v.src) frame.setAttribute("src", v.src);
+    frame.title = v.title;
+    open.href = v.src;
+    pLabel.textContent = v.promptLabel;
+    pText.textContent = v.prompt;
+    pText.classList.toggle("team", v.team);
+    list.innerHTML = "";
+    v.watch.forEach(function (w) { var li = document.createElement("li"); li.textContent = w; list.appendChild(li); });
+  }
+
+  tabs.forEach(function (t, i) {
+    t.addEventListener("click", function () { select(t.dataset.v); try { history.replaceState(null, "", "#" + t.dataset.v); } catch (e) {} });
+    t.addEventListener("keydown", function (e) {
+      var d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+      if (!d) return;
+      e.preventDefault();
+      var next = tabs[(i + d + tabs.length) % tabs.length];
+      select(next.dataset.v, true);
+    });
+  });
+
+  document.querySelectorAll(".seg button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      document.querySelectorAll(".seg button").forEach(function (o) { o.setAttribute("aria-pressed", o === b ? "true" : "false"); });
+      panel.classList.toggle("wide", b.dataset.w === "wide");
+    });
+  });
+
+  function fromHash() { var h = location.hash.replace("#", ""); select(V[h] ? h : "v1"); }
+  window.addEventListener("hashchange", fromHash);
+  fromHash();
+})();
+</script>

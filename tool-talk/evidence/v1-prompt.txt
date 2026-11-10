@@ -1,0 +1,15 @@
+PROMPT GIVEN TO THE AI TOOL (verbatim, single attempt, no follow-up turns)
+Date: 10 November 2026
+Tool: Claude (model claude-opus-5-5), run as a fresh subagent with no project files or earlier conversation
+Output saved unedited to: v1-ai-generated.html
+
+----- prompt starts -----
+Create a clickable prototype as a single self-contained HTML file (inline CSS and JavaScript, no external libraries or fonts) for a university counselling service.
+
+The user is a university student who is thinking about contacting the counselling service for the first time. The prototype should help them understand what happens after they get in touch.
+
+Make 4 to 6 screens with working navigation between them. Use realistic placeholder content.
+----- prompt ends -----
+
+Instruction added for the tool run only (not part of the design prompt):
+"Save the complete HTML file to D:\CS3014-D4-Prototype\tool-talk\evidence\v1-ai-generated.html. Do not read any other files on this computer; work only from the request above. Reply with one line saying the file is saved."

@@ -1,0 +1,20 @@
+REPAIR PROMPT GIVEN TO THE AI TOOL (verbatim, single follow-up turn in the same conversation that produced v1)
+Date: 10 November 2026
+Tool: Claude (model claude-opus-5-5), same subagent conversation as v1, still with no project files
+Written by: the team, from D3/D4 research findings
+Output saved unedited to: v2-ai-repaired.html (v1 is kept unchanged)
+
+----- prompt starts -----
+This prototype assumes a student who gets in touch is ready to refer themselves. Our research found that first-time students mostly want to understand what happens and ask a few questions before committing to anything, and they want to know they can stop at each stage.
+
+Please revise the prototype:
+
+1. Replace the self-referral form with a way for the student to put together a short message of questions, which they copy into their own email. Don't ask for a student ID or for what they need support with, and never say that anything was sent or booked.
+2. On each stage of the "what happens after you get in touch" timeline, say whether the student can stop at that point and what stopping means.
+3. The urgent help numbers aren't verified for our users. Show the urgent contact as "Not confirmed" with a note to use local emergency services, instead of specific numbers.
+
+Keep the rest of the prototype as it is.
+----- prompt ends -----
+
+Instruction added for the tool run only (not part of the design prompt):
+"Save the revised file as a new file, D:\CS3014-D4-Prototype\tool-talk\evidence\v2-ai-repaired.html, and leave v1-ai-generated.html unchanged. Don't read any other files except v1-ai-generated.html. Reply with one line saying the file is saved."
